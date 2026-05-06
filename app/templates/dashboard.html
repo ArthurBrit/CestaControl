@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Painel</p>
+    <h1>Movimento de estoque</h1>
+  </div>
+  <a class="button primary" href="/retiradas/nova">Lancar retirada</a>
+</section>
+
+<section class="metrics">
+  <article>
+    <span>Itens em estoque</span>
+    <strong>{{ total_stock }}</strong>
+  </article>
+  <article>
+    <span>Tecnicos ativos</span>
+    <strong>{{ total_technicians }}</strong>
+  </article>
+  <article>
+    <span>Total ja retirado</span>
+    <strong>{{ total_withdrawals }}</strong>
+  </article>
+</section>
+
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-title">
+      <h2>Retiradas recentes</h2>
+      <a href="/historico">Ver tudo</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Tecnico</th><th>Item</th><th>Qtd.</th></tr>
+        </thead>
+        <tbody>
+          {% for row in recent_withdrawals %}
+            <tr>
+              <td>{{ row.withdrawn_at.strftime("%d/%m/%Y") }}</td>
+              <td>{{ row.technician.name }}</td>
+              <td>{{ row.item.name }}</td>
+              <td>{{ row.quantity }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="empty">Nenhuma retirada lancada ainda.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <h2>Estoque baixo</h2>
+      <a href="/estoque">Ajustar</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Atual</th><th>Minimo</th></tr>
+        </thead>
+        <tbody>
+          {% for item in low_stock_items %}
+            <tr>
+              <td>{{ item.name }}</td>
+              <td><span class="badge warn">{{ item.stock }}</span></td>
+              <td>{{ item.minimum_stock }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3" class="empty">Tudo acima do minimo definido.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

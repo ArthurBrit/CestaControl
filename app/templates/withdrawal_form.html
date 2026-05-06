@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Recepcao</p>
+    <h1>Lancar retirada</h1>
+  </div>
+</section>
+
+<form class="panel stack narrow" method="post" action="/retiradas">
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <label>Tecnico
+    <select name="technician_id" required>
+      <option value="">Selecione</option>
+      {% for technician in technicians %}
+        <option value="{{ technician.id }}">{{ technician.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Item
+    <select name="item_id" required>
+      <option value="">Selecione</option>
+      {% for item in items %}
+        <option value="{{ item.id }}">{{ item.name }} - estoque: {{ item.stock }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <div class="inline-fields">
+    <label>Quantidade
+      <input name="quantity" type="number" min="1" required>
+    </label>
+    <label>Data
+      <input name="withdrawn_at" type="date" value="{{ today }}" required>
+    </label>
+  </div>
+  <label>Observacao
+    <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+  </label>
+  <button class="button primary" type="submit">Registrar retirada</button>
+</form>
+{% endblock %}

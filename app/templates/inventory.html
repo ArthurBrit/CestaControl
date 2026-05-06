@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Almoxarifado</p>
+    <h1>Estoque</h1>
+  </div>
+</section>
+
+<section class="grid form-list">
+  <form class="panel stack" method="post" action="/estoque">
+    <h2>Novo item</h2>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <label>Nome
+      <input name="name" placeholder="Cesta basica" required>
+    </label>
+    <label>Unidade
+      <input name="unit" value="unidade" required>
+    </label>
+    <div class="inline-fields">
+      <label>Estoque
+        <input name="stock" type="number" min="0" value="0" required>
+      </label>
+      <label>Minimo
+        <input name="minimum_stock" type="number" min="0" value="0" required>
+      </label>
+    </div>
+    <button class="button primary" type="submit">Cadastrar</button>
+  </form>
+
+  <div class="panel wide">
+    <h2>Itens</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Unidade</th><th>Estoque</th><th>Minimo</th><th>Status</th><th>Acoes</th></tr></thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.unit }}</td>
+              <td colspan="2">
+                <form class="row-form" method="post" action="/estoque/{{ item.id }}/ajustar">
+                  <input name="stock" type="number" min="0" value="{{ item.stock }}" required>
+                  <input name="minimum_stock" type="number" min="0" value="{{ item.minimum_stock }}" required>
+                  <button class="button small" type="submit">Salvar</button>
+                </form>
+              </td>
+              <td>{{ "Ativo" if item.active else "Inativo" }}</td>
+              <td>
+                <form method="post" action="/estoque/{{ item.id }}/alternar">
+                  <button class="button small" type="submit">{{ "Inativar" if item.active else "Ativar" }}</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="empty">Nenhum item cadastrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
