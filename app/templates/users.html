@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Acesso</p>
+    <h1>Usuarios e permissoes</h1>
+  </div>
+</section>
+
+<section class="grid form-list">
+  <form class="panel stack" method="post" action="/usuarios">
+    <h2>Novo usuario</h2>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <label>Nome completo
+      <input name="full_name" required>
+    </label>
+    <label>Usuario
+      <input name="username" required>
+    </label>
+    <label>Senha inicial
+      <input name="password" type="password" required>
+    </label>
+    <label>Nivel de acesso
+      <select name="role" required>
+        {% for value, label in roles.items() %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="button primary" type="submit">Cadastrar usuario</button>
+  </form>
+
+  <div class="panel wide">
+    <h2>Contas cadastradas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Usuario</th><th>Nivel</th><th>Status</th><th>Acoes</th></tr></thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td>{{ user.full_name }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <form class="row-form compact" method="post" action="/usuarios/{{ user.id }}/perfil">
+                  <select name="role">
+                    {% for value, label in roles.items() %}
+                      <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="button small" type="submit">Salvar</button>
+                </form>
+              </td>
+              <td>{{ "Ativo" if user.active else "Inativo" }}</td>
+              <td class="actions-cell">
+                <form class="row-form compact" method="post" action="/usuarios/{{ user.id }}/senha">
+                  <input name="password" type="password" placeholder="Nova senha" required>
+                  <button class="button small" type="submit">Trocar</button>
+                </form>
+                {% if user.username != request.session.get("user") %}
+                  <form method="post" action="/usuarios/{{ user.id }}/alternar">
+                    <button class="button small" type="submit">{{ "Inativar" if user.active else "Ativar" }}</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="empty">Nenhum usuario cadastrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

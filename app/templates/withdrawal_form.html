@@ -17,6 +17,14 @@
       {% endfor %}
     </select>
   </label>
+  <div class="inline-fields">
+    <label>Acompanhante
+      <input name="companion_name" placeholder="Nome de quem acompanhou a visita" required>
+    </label>
+    <label>Destino da visita
+      <input name="destination" placeholder="Bairro, endereco ou referencia">
+    </label>
+  </div>
   <label>Item
     <select name="item_id" required>
       <option value="">Selecione</option>
@@ -33,7 +41,7 @@
       <input name="withdrawn_at" type="date" value="{{ today }}" required>
     </label>
   </div>
-  <label>Observacao
+  <label>Observacao da visita
     <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
   </label>
   <button class="button primary" type="submit">Registrar retirada</button>

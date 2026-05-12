@@ -32,6 +32,24 @@ Login padrao local:
 
 Antes de usar no servico, altere `SECRET_KEY` e `ADMIN_PASSWORD` no arquivo `.env`.
 
+## Banco de dados
+
+Para uso em rede local, o projeto usa SQLite por padrao:
+
+```env
+DATABASE_URL=sqlite:///./data/cestacontrol.db
+```
+
+O banco fica salvo em `data/cestacontrol.db`. Faca backup desse arquivo com frequencia.
+
+## Deploy
+
+Para instalar em um PC servidor Windows e acessar pela rede local, veja:
+
+- `docs/instalacao-rede-local-windows.md`
+
+Para servidor Linux com Nginx, veja `docs/deploy-nginx.md`.
+
 ## Estrutura
 
 ```text

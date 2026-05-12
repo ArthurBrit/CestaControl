@@ -4,18 +4,43 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title or "CestaControl" }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+  <script>
+    (function () {
+      var theme = "light";
+      try {
+        theme = localStorage.getItem("theme") || "light";
+      } catch (error) {
+        theme = "light";
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}?v=20260512-2">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">CestaControl</a>
+    <a class="brand" href="/">
+      <span class="brand-mark">CC</span>
+      <span>CestaControl</span>
+    </a>
     <nav class="nav">
       <a href="/">Painel</a>
-      <a href="/retiradas/nova">Nova retirada</a>
+      {% if request.session.get("user_role") in ["admin", "almoxarifado"] %}
+        <a href="/retiradas/nova">Nova retirada</a>
+      {% endif %}
       <a href="/historico">Historico</a>
       <a href="/estoque">Estoque</a>
       <a href="/tecnicos">Tecnicos</a>
+      {% if request.session.get("user_role") == "admin" %}
+        <a href="/ponto">Ponto</a>
+        <a href="/usuarios">Usuarios</a>
+      {% endif %}
     </nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar modo escuro">Tema</button>
+    <div class="user-chip">
+      <strong>{{ request.session.get("user_name", request.session.get("user", "")) }}</strong>
+      <span>{{ request.session.get("user_role", "") }}</span>
+    </div>
     <form method="post" action="/logout">
       <button class="button ghost" type="submit">Sair</button>
     </form>
@@ -24,5 +49,6 @@
   <main class="page">
     {% block content %}{% endblock %}
   </main>
+  <script src="{{ url_for('static', path='/js/theme.js') }}?v=20260512-2"></script>
 </body>
 </html>

@@ -3,61 +3,144 @@
 <section class="page-heading">
   <div>
     <p class="eyebrow">Almoxarifado</p>
-    <h1>Estoque</h1>
+    <h1>Controle de estoque</h1>
   </div>
 </section>
 
-<section class="grid form-list">
-  <form class="panel stack" method="post" action="/estoque">
-    <h2>Novo item</h2>
-    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
-    <label>Nome
-      <input name="name" placeholder="Cesta basica" required>
-    </label>
-    <label>Unidade
-      <input name="unit" value="unidade" required>
-    </label>
-    <div class="inline-fields">
-      <label>Estoque
-        <input name="stock" type="number" min="0" value="0" required>
+<section class="metrics compact-metrics">
+  <article>
+    <span>Total disponivel</span>
+    <strong>{{ total_stock }}</strong>
+  </article>
+  <article>
+    <span>Itens cadastrados</span>
+    <strong>{{ items|length }}</strong>
+  </article>
+  <article>
+    <span>Abaixo do minimo</span>
+    <strong>{{ low_stock_count }}</strong>
+  </article>
+</section>
+
+<section class="grid form-list inventory-layout">
+  {% if request.session.get("user_role") in ["admin", "almoxarifado"] %}
+    <form class="panel stack" method="post" action="/estoque">
+      <h2>Novo item</h2>
+      {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+      <label>Nome
+        <input name="name" placeholder="Cesta basica" required>
       </label>
-      <label>Minimo
-        <input name="minimum_stock" type="number" min="0" value="0" required>
+      <div class="inline-fields">
+        <label>Categoria
+          <input name="category" value="Cestas" required>
+        </label>
+        <label>Unidade
+          <input name="unit" value="unidade" required>
+        </label>
+      </div>
+      <label>Localizacao
+        <input name="location" value="Almoxarifado" required>
       </label>
-    </div>
-    <button class="button primary" type="submit">Cadastrar</button>
-  </form>
+      <div class="inline-fields">
+        <label>Estoque inicial
+          <input name="stock" type="number" min="0" value="0" required>
+        </label>
+        <label>Estoque minimo
+          <input name="minimum_stock" type="number" min="0" value="0" required>
+        </label>
+      </div>
+      <button class="button primary" type="submit">Cadastrar item</button>
+    </form>
+  {% endif %}
 
   <div class="panel wide">
-    <h2>Itens</h2>
+    <div class="panel-title">
+      <h2>Itens do almoxarifado</h2>
+    </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Item</th><th>Unidade</th><th>Estoque</th><th>Minimo</th><th>Status</th><th>Acoes</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Categoria</th>
+            <th>Local</th>
+            <th>Atual</th>
+            <th>Minimo</th>
+            <th>Entrada</th>
+            <th>Ajuste</th>
+            <th>Status</th>
+          </tr>
+        </thead>
         <tbody>
           {% for item in items %}
-            <tr>
-              <td>{{ item.name }}</td>
-              <td>{{ item.unit }}</td>
-              <td colspan="2">
-                <form class="row-form" method="post" action="/estoque/{{ item.id }}/ajustar">
-                  <input name="stock" type="number" min="0" value="{{ item.stock }}" required>
-                  <input name="minimum_stock" type="number" min="0" value="{{ item.minimum_stock }}" required>
-                  <button class="button small" type="submit">Salvar</button>
-                </form>
-              </td>
-              <td>{{ "Ativo" if item.active else "Inativo" }}</td>
+            <tr class="{% if item.active and item.stock <= item.minimum_stock %}row-warning{% endif %}">
               <td>
-                <form method="post" action="/estoque/{{ item.id }}/alternar">
-                  <button class="button small" type="submit">{{ "Inativar" if item.active else "Ativar" }}</button>
-                </form>
+                <strong>{{ item.name }}</strong>
+                <span class="muted-line">{{ item.unit }}</span>
+              </td>
+              <td>{{ item.category }}</td>
+              <td>{{ item.location }}</td>
+              <td><span class="badge {% if item.stock <= item.minimum_stock %}warn{% endif %}">{{ item.stock }}</span></td>
+              <td>{{ item.minimum_stock }}</td>
+              <td>
+                {% if request.session.get("user_role") in ["admin", "almoxarifado"] %}
+                  <form class="row-form compact" method="post" action="/estoque/{{ item.id }}/entrada">
+                    <input name="quantity" type="number" min="1" placeholder="Qtd." required>
+                    <input name="reason" placeholder="Motivo" value="Entrada">
+                    <button class="button small" type="submit">Adicionar</button>
+                  </form>
+                {% endif %}
+              </td>
+              <td>
+                {% if request.session.get("user_role") in ["admin", "almoxarifado"] %}
+                  <form class="row-form compact" method="post" action="/estoque/{{ item.id }}/ajustar">
+                    <input name="stock" type="number" min="0" value="{{ item.stock }}" required>
+                    <input name="minimum_stock" type="number" min="0" value="{{ item.minimum_stock }}" required>
+                    <button class="button small" type="submit">Salvar</button>
+                  </form>
+                {% endif %}
+              </td>
+              <td>
+                <span class="status {{ 'ok' if item.active else 'off' }}">{{ "Ativo" if item.active else "Inativo" }}</span>
+                {% if request.session.get("user_role") in ["admin", "almoxarifado"] %}
+                  <form method="post" action="/estoque/{{ item.id }}/alternar">
+                    <button class="button small ghost" type="submit">{{ "Inativar" if item.active else "Ativar" }}</button>
+                  </form>
+                {% endif %}
               </td>
             </tr>
           {% else %}
-            <tr><td colspan="6" class="empty">Nenhum item cadastrado.</td></tr>
+            <tr><td colspan="8" class="empty">Nenhum item cadastrado.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-title">
+    <h2>Ultimas movimentacoes</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Item</th><th>Tipo</th><th>Qtd.</th><th>Saldo</th><th>Motivo</th><th>Usuario</th></tr></thead>
+      <tbody>
+        {% for movement in movements %}
+          <tr>
+            <td>{{ movement.created_at.strftime("%d/%m/%Y %H:%M") if movement.created_at else "-" }}</td>
+            <td>{{ movement.item.name }}</td>
+            <td><span class="status">{{ movement.movement_type }}</span></td>
+            <td>{{ movement.quantity }}</td>
+            <td>{{ movement.balance_after }}</td>
+            <td>{{ movement.reason or "-" }}</td>
+            <td>{{ movement.created_by or "-" }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="empty">Nenhuma movimentacao registrada ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </section>
 {% endblock %}

@@ -4,9 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Entrar | CestaControl</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+  <script>
+    (function () {
+      var theme = "light";
+      try {
+        theme = localStorage.getItem("theme") || "light";
+      } catch (error) {
+        theme = "light";
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}?v=20260512-2">
 </head>
 <body class="login-page">
+  <button class="theme-toggle login-theme" type="button" data-theme-toggle aria-label="Alternar modo escuro">Tema</button>
   <main class="login-shell">
     <section class="login-panel">
       <p class="eyebrow">Controle interno</p>
@@ -23,5 +35,6 @@
       </form>
     </section>
   </main>
+  <script src="{{ url_for('static', path='/js/theme.js') }}?v=20260512-2"></script>
 </body>
 </html>

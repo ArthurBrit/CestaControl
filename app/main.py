@@ -6,7 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.core.config import get_settings
 from app.database import create_db_and_tables
-from app.routers import auth, dashboard, inventory, reports, technicians, withdrawals
+from app.routers import auth, dashboard, inventory, reports, technicians, timeclock, users, withdrawals
 
 
 settings = get_settings()
@@ -29,3 +29,5 @@ app.include_router(technicians.router)
 app.include_router(inventory.router)
 app.include_router(withdrawals.router)
 app.include_router(reports.router)
+app.include_router(users.router)
+app.include_router(timeclock.router)

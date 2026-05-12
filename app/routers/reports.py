@@ -8,8 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response, Streamin
 from fastapi.templating import Jinja2Templates
 
 from app.database import get_db
-from app.models import InventoryItem, Technician, Withdrawal
-from app.routers.deps import require_login
+from app.models import InventoryItem, InventoryMovement, Technician, Withdrawal
+from app.routers.deps import require_login, require_role
 from app.services.exports import build_excel_report, build_pdf_report
 
 
@@ -100,7 +100,7 @@ def history(
 
 @router.post("/historico/{withdrawal_id}/excluir")
 def delete_withdrawal(withdrawal_id: int, request: Request, db: Session = Depends(get_db)) -> RedirectResponse:
-    redirect = require_login(request)
+    redirect = require_role(request, {"admin", "almoxarifado"})
     if redirect:
         return redirect
 
@@ -109,6 +109,16 @@ def delete_withdrawal(withdrawal_id: int, request: Request, db: Session = Depend
         item = db.get(InventoryItem, withdrawal.item_id)
         if item:
             item.stock += withdrawal.quantity
+            db.add(
+                InventoryMovement(
+                    item_id=item.id,
+                    movement_type="devolucao",
+                    quantity=withdrawal.quantity,
+                    balance_after=item.stock,
+                    reason="Exclusao de retirada",
+                    created_by=request.session.get("user"),
+                )
+            )
         db.delete(withdrawal)
         db.commit()
     return RedirectResponse(url="/historico", status_code=303)

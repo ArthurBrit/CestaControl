@@ -8,8 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.database import get_db
-from app.models import InventoryItem, Technician, Withdrawal
-from app.routers.deps import require_login
+from app.models import InventoryItem, InventoryMovement, Technician, Withdrawal
+from app.routers.deps import require_role
 
 
 router = APIRouter(prefix="/retiradas", tags=["retiradas"])
@@ -18,7 +18,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/nova", response_class=HTMLResponse)
 def new_withdrawal(request: Request, db: Session = Depends(get_db)) -> Response:
-    redirect = require_login(request)
+    redirect = require_role(request, {"admin", "almoxarifado"})
     if redirect:
         return redirect
 
@@ -38,19 +38,21 @@ def create_withdrawal(
     item_id: int = Form(...),
     quantity: int = Form(...),
     withdrawn_at: date = Form(...),
+    companion_name: str = Form(...),
+    destination: str = Form(""),
     notes: str = Form(""),
     db: Session = Depends(get_db),
 ) -> Response:
-    redirect = require_login(request)
+    redirect = require_role(request, {"admin", "almoxarifado"})
     if redirect:
         return redirect
 
     item = db.get(InventoryItem, item_id)
     technician = db.get(Technician, technician_id)
-    if not item or not technician or quantity <= 0 or item.stock < quantity:
+    if not item or not technician or quantity <= 0 or item.stock < quantity or not companion_name.strip():
         technicians = db.scalars(select(Technician).where(Technician.active.is_(True)).order_by(Technician.name.asc())).all()
         items = db.scalars(select(InventoryItem).where(InventoryItem.active.is_(True)).order_by(InventoryItem.name.asc())).all()
-        error = "Confira tecnico, item e quantidade. O estoque precisa ser suficiente."
+        error = "Confira tecnico, acompanhante, item e quantidade. O estoque precisa ser suficiente."
         return templates.TemplateResponse(
             request,
             "withdrawal_form.html",
@@ -65,7 +67,19 @@ def create_withdrawal(
             item_id=item_id,
             quantity=quantity,
             withdrawn_at=withdrawn_at,
+            companion_name=companion_name.strip(),
+            destination=destination.strip() or None,
             notes=notes.strip() or None,
+        )
+    )
+    db.add(
+        InventoryMovement(
+            item_id=item_id,
+            movement_type="saida",
+            quantity=-quantity,
+            balance_after=item.stock,
+            reason=f"Retirada para visita - {technician.name}",
+            created_by=request.session.get("user"),
         )
     )
     db.commit()

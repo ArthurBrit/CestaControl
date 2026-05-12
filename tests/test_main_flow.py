@@ -38,6 +38,8 @@ def test_main_flow_registers_withdrawal_and_exports_reports():
                     "item_id": "1",
                     "quantity": "1",
                     "withdrawn_at": "2026-05-05",
+                    "companion_name": "Acompanhante Teste",
+                    "destination": "Visita teste",
                     "notes": "",
                 },
                 follow_redirects=False,
@@ -45,6 +47,19 @@ def test_main_flow_registers_withdrawal_and_exports_reports():
             assert withdrawal.status_code in {303, 400}
 
             assert client.get("/historico").status_code == 200
+            assert client.get("/usuarios").status_code == 200
+            assert client.get("/ponto").status_code == 200
+            point = client.post(
+                "/ponto",
+                data={
+                    "user_id": "1",
+                    "record_type": "entrada",
+                    "recorded_at": "2026-05-05T08:00",
+                    "notes": "Ponto teste",
+                },
+                follow_redirects=False,
+            )
+            assert point.status_code == 303
             assert client.get("/relatorios/pdf").headers["content-type"] == "application/pdf"
             assert "spreadsheetml" in client.get("/relatorios/excel").headers["content-type"]
     finally:

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">Administrativo</p>
+    <h1>Registro de ponto</h1>
+  </div>
+</section>
+
+<section class="grid form-list">
+  <form class="panel stack" method="post" action="/ponto">
+    <div>
+      <h2>Nova marcacao</h2>
+      <p class="helper-text">Registre entrada, intervalo, retorno ou saida de funcionarios.</p>
+    </div>
+    <label>Funcionario
+      <select name="user_id" required>
+        <option value="">Selecione</option>
+        {% for user in users %}
+          <option value="{{ user.id }}">{{ user.full_name }} - {{ user.username }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Tipo de ponto
+      <select name="record_type" required>
+        {% for value, label in record_types.items() %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Data e hora
+      <input name="recorded_at" type="datetime-local" value="{{ today }}" required>
+    </label>
+    <label>Observacao
+      <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+    </label>
+    <button class="button primary" type="submit">Registrar ponto</button>
+  </form>
+
+  <div class="panel wide">
+    <div class="panel-title">
+      <h2>Marcacoes do dia</h2>
+      <span class="subtle-pill">{{ records|length }} registros</span>
+    </div>
+
+    <form class="filters slim" method="get" action="/ponto">
+      <label>Data
+        <input name="selected_date" type="date" value="{{ filters.selected_date }}">
+      </label>
+      <label>Funcionario
+        <select name="user_id">
+          <option value="">Todos</option>
+          {% for user in users %}
+            <option value="{{ user.id }}" {% if filters.user_id == user.id %}selected{% endif %}>{{ user.full_name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button primary" type="submit">Filtrar</button>
+      <a class="button ghost" href="/ponto">Limpar</a>
+    </form>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Horario</th><th>Funcionario</th><th>Tipo</th><th>Observacao</th><th>Lancado por</th><th></th></tr></thead>
+        <tbody>
+          {% for record in records %}
+            <tr>
+              <td>{{ record.recorded_at.strftime("%d/%m/%Y %H:%M") }}</td>
+              <td><strong>{{ record.user.full_name }}</strong></td>
+              <td><span class="status">{{ record_types.get(record.record_type, record.record_type) }}</span></td>
+              <td>{{ record.notes or "-" }}</td>
+              <td>{{ record.created_by or "-" }}</td>
+              <td>
+                <form method="post" action="/ponto/{{ record.id }}/excluir" onsubmit="return confirm('Excluir esta marcacao de ponto?')">
+                  <button class="button small danger" type="submit">Excluir</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="empty">Nenhuma marcacao para os filtros selecionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
